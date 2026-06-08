@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10S Studio - Trình Tạo Ảnh & Video AI</title>
+  <meta name="description" content="Giao diện tạo ảnh, video và chỉnh sửa video tham chiếu sử dụng Cloudfire API của Gemini.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background blobs -->
+  <div class="decor-blob-1"></div>
+  <div class="decor-blob-2"></div>
+
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header class="main-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="logo-text">
+          <h1>10S Studio <span class="version-badge">v1.0</span></h1>
+          <span>Trình tạo Ảnh & Video AI chuyên nghiệp</span>
+        </div>
+      </div>
+      
+      <!-- API Server Connection Settings -->
+      <div class="connection-settings glass-card">
+        <div class="input-inline-group">
+          <div class="input-with-icon">
+            <i class="fa-solid fa-globe"></i>
+            <input type="text" id="api-url-input" placeholder="URL Máy chủ (vd: https://xxx.trycloudflare.com)" title="Địa chỉ URL API Server của bạn">
+          </div>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-key"></i>
+            <input type="password" id="api-key-input" placeholder="Nhập API Key (cf_...)" title="API Key để xác thực quyền gọi tài nguyên">
+          </div>
+          <button id="btn-connect" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-link"></i> Kết nối
+          </button>
+        </div>
+        <div class="conn-status-row">
+          <span class="status-indicator offline" id="conn-indicator"></span>
+          <span class="status-text" id="conn-status-text">Chưa kết nối</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN GRID -->
+    <main class="content-grid">
+      
+      <!-- LEFT PANEL: CREATOR forms -->
+      <section class="card glass-card creator-panel">
+        <div class="card-header">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-image">
+              <i class="fa-solid fa-image"></i> Tạo Ảnh
+            </button>
+            <button class="tab-btn" data-tab="tab-video">
+              <i class="fa-solid fa-video"></i> Tạo Video
+            </button>
+            <button class="tab-btn" data-tab="tab-edit">
+              <i class="fa-solid fa-sliders"></i> Chỉnh sửa & Tham chiếu
+            </button>
+          </div>
+        </div>
+        
+        <!-- Form 1: Tạo Ảnh -->
+        <div class="tab-content active" id="tab-image">
+          <form id="form-image" class="creator-form">
+            <div class="form-group">
+              <label for="img-prompt">Mô tả ảnh muốn tạo <span class="required">*</span></label>
+              <textarea id="img-prompt" class="form-control-textarea" rows="3" placeholder="Ví dụ: tạo ảnh một phi hành gia đang thưởng trà trên mặt trăng, phong cách cinematic" required></textarea>
+              <div class="prompt-hint">
+                <i class="fa-solid fa-circle-info"></i> Prompt phải chứa cụm từ <strong>"tạo ảnh"</strong> (ví dụ: tạo ảnh con rồng xanh).
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Ảnh tham chiếu phong cách / sản phẩm (Tùy chọn)</label>
+              <div class="dropzone" id="img-dropzone">
+                <input type="file" id="img-file" accept="image/*" multiple style="display: none;">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>Kéo thả ảnh tham chiếu hoặc click để chọn</p>
+                <span class="dropzone-subtext">Hỗ trợ đính kèm nhiều ảnh tham chiếu</span>
+                <div class="preview-grid" id="img-preview-grid"></div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-submit">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Bắt đầu tạo ảnh
+            </button>
+          </form>
+        </div>
+        
+        <!-- Form 2: Tạo Video -->
+        <div class="tab-content" id="tab-video">
+          <form id="form-video" class="creator-form">
+            <div class="form-group">
+              <label for="vid-prompt">Mô tả video muốn tạo <span class="required">*</span></label>
+              <textarea id="vid-prompt" class="form-control-textarea" rows="3" placeholder="Ví dụ: tạo video một dòng thác nước chảy xiết giữa rừng nguyên sinh huyền ảo" required></textarea>
+              <div class="prompt-hint">
+                <i class="fa-solid fa-circle-info"></i> Prompt phải chứa cụm từ <strong>"tạo video"</strong> (ví dụ: tạo video ô tô chạy trên sa mạc).
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-submit">
+              <i class="fa-solid fa-play"></i> Bắt đầu tạo video
+            </button>
+          </form>
+        </div>
+        
+        <!-- Form 3: Chỉnh sửa & Tham chiếu -->
+        <div class="tab-content" id="tab-edit">
+          <form id="form-edit" class="creator-form">
+            <div class="form-group">
+              <label for="edit-prompt">Mô tả chỉnh sửa hoặc tham chiếu tạo video <span class="required">*</span></label>
+              <textarea id="edit-prompt" class="form-control-textarea" rows="3" placeholder="Ví dụ: tạo video làm sáng bối cảnh xung quanh và tăng chuyển động nước" required></textarea>
+              <div class="prompt-hint">
+                <i class="fa-solid fa-circle-info"></i> Tải lên video gốc cần chỉnh sửa kèm theo các ảnh tham chiếu (nếu có).
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Đính kèm Video gốc & Ảnh tham chiếu</label>
+              <div class="dropzone" id="edit-dropzone">
+                <input type="file" id="edit-file" accept="image/*,video/*" multiple style="display: none;">
+                <i class="fa-solid fa-file-video"></i>
+                <p>Kéo thả 1 video và ảnh tham chiếu hoặc click để chọn</p>
+                <span class="dropzone-subtext">Hỗ trợ 1 video + tối đa 3 ảnh tham chiếu</span>
+                <div class="preview-grid" id="edit-preview-grid"></div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-submit">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Gửi yêu cầu chỉnh sửa
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: TASK QUEUE & PREVIEWS -->
+      <section class="card glass-card results-panel">
+        <div class="card-header-flex">
+          <div class="card-title-group">
+            <div class="card-icon"><i class="fa-solid fa-list-check"></i></div>
+            <h2>Lịch sử tác vụ của bạn</h2>
+          </div>
+          <button id="btn-clear-history" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-trash-can"></i> Xóa lịch sử
+          </button>
+        </div>
+        
+        <!-- Task list container -->
+        <div class="tasks-container" id="tasks-list-container">
+          <div class="empty-state" id="empty-tasks-state">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>Chưa có tác vụ nào được tạo.</p>
+            <span>Hãy cấu hình thông tin kết nối và nhập prompt để bắt đầu tạo ảnh & video AI.</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+      <p>&copy; 2026 10S Studio. Built for Gemini Cloudfire API. Deployable on Vercel.</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

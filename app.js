@@ -34,11 +34,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Initialize Config and Connection ---
   function init() {
-    // Load config from localStorage
-    const savedUrl = localStorage.getItem('10s_api_url');
-    const savedKey = localStorage.getItem('10s_api_key');
-    if (savedUrl) apiUrlInput.value = savedUrl;
-    if (savedKey) apiKeyInput.value = savedKey;
+    // Load config from query parameters or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryUrl = urlParams.get('apiUrl');
+    const queryKey = urlParams.get('apiKey');
+
+    if (queryUrl) {
+      apiUrlInput.value = queryUrl;
+      localStorage.setItem('10s_api_url', queryUrl);
+    } else {
+      const savedUrl = localStorage.getItem('10s_api_url');
+      if (savedUrl) apiUrlInput.value = savedUrl;
+    }
+
+    if (queryKey) {
+      apiKeyInput.value = queryKey;
+      localStorage.setItem('10s_api_key', queryKey);
+    } else {
+      const savedKey = localStorage.getItem('10s_api_key');
+      if (savedKey) apiKeyInput.value = savedKey;
+    }
 
     // Load Task List from localStorage
     const savedTasks = localStorage.getItem('10s_task_list');

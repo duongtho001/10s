@@ -425,10 +425,18 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       }
 
+      const isCancelable = task.status === 'pending' || task.status === 'running';
+      const cancelBtnHtml = isCancelable 
+        ? `<button class="btn-cancel-task" onclick="cancelClientTask('${task.id}')" title="Hủy tác vụ này" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;"><i class="fa-solid fa-ban"></i> Hủy</button>` 
+        : '';
+
       const cardHtml = `
-        <div class="task-header">
+        <div class="task-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span class="task-id">ID: ${task.id.substring(0, 8)}</span>
-          <span class="status-badge ${task.status}">${statusText}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="status-badge ${task.status}">${statusText}</span>
+            ${cancelBtnHtml}
+          </div>
         </div>
         <div class="task-prompt">${task.prompt}</div>
         ${task.hasRef ? `
@@ -581,6 +589,45 @@ document.addEventListener('DOMContentLoaded', () => {
       renderTaskList();
     }
   }
+
+  // Hủy tác vụ từ client
+  window.cancelClientTask = async (id) => {
+    if (!confirm('Bạn có chắc chắn muốn dừng và hủy tác vụ này không?')) return;
+    
+    const baseUrl = apiUrlInput.value.trim().replace(/\/+$/, '');
+    const apiKey = apiKeyInput.value.trim();
+    
+    if (!baseUrl || !apiKey) {
+      alert('Vui lòng kết nối máy chủ ở Header trước khi thực hiện.');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${baseUrl}/cloudfire/api/tasks/${id}/cancel`, {
+        method: 'POST',
+        headers: { 'X-API-Key': apiKey }
+      });
+      const result = await response.json();
+      
+      if (!response.ok) throw new Error(result.error || 'Không thể hủy tác vụ');
+      
+      alert('✅ Đã dừng và hủy tác vụ thành công.');
+      
+      // Update local state status and poll immediately
+      const task = taskList.find(t => t.id === id);
+      if (task) {
+        task.status = 'failed';
+        task.error = '❌ Tác vụ đã bị dừng và hủy bởi người dùng.';
+        task.updatedAt = new Date().toISOString();
+        saveTasks();
+        renderTaskList();
+      }
+      
+      pollActiveTasks();
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
+    }
+  };
 
   // --- Initialize Page ---
   init();

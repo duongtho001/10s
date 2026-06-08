@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tasksListContainer = document.getElementById('tasks-list-container');
   const emptyTasksState = document.getElementById('empty-tasks-state');
   const btnClearHistory = document.getElementById('btn-clear-history');
+  const btnStopAll = document.getElementById('btn-stop-all');
 
   // --- State Variables ---
   let filesToUploadImage = [];
@@ -437,6 +438,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderTaskList() {
+    const hasActiveTasks = taskList.some(t => t.status === 'pending' || t.status === 'running');
+    if (btnStopAll) {
+      btnStopAll.style.display = hasActiveTasks ? 'inline-flex' : 'none';
+    }
+
     if (taskList.length === 0) {
       emptyTasksState.style.display = 'flex';
       // Remove any rendered cards
@@ -602,6 +608,57 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTaskList();
     stopPolling();
   });
+
+  if (btnStopAll) {
+    btnStopAll.addEventListener('click', async () => {
+      const activeTasks = taskList.filter(t => t.status === 'pending' || t.status === 'running');
+      if (activeTasks.length === 0) return;
+
+      if (!confirm(`Bạn có chắc chắn muốn dừng và hủy toàn bộ ${activeTasks.length} tác vụ đang chạy/chờ không?`)) {
+        return;
+      }
+
+      const baseUrl = apiUrlInput.value.trim().replace(/\/+$/, '');
+      const apiKey = apiKeyInput.value.trim();
+
+      if (!baseUrl || !apiKey) {
+        alert('Vui lòng kết nối máy chủ ở Header trước khi thực hiện.');
+        return;
+      }
+
+      const originalText = btnStopAll.innerHTML;
+      btnStopAll.disabled = true;
+      btnStopAll.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang dừng...`;
+
+      try {
+        await Promise.all(activeTasks.map(async (task) => {
+          try {
+            const response = await fetch(`${baseUrl}/cloudfire/api/tasks/${task.id}/cancel`, {
+              method: 'POST',
+              headers: { 'X-API-Key': apiKey }
+            });
+            if (response.ok) {
+              task.status = 'failed';
+              task.error = '❌ Tác vụ đã bị dừng và hủy bởi người dùng.';
+              task.updatedAt = new Date().toISOString();
+            }
+          } catch (err) {
+            console.error(`Lỗi khi dừng task ${task.id}:`, err.message);
+          }
+        }));
+
+        saveTasks();
+        renderTaskList();
+        alert('✅ Đã yêu cầu dừng toàn bộ tác vụ thành công.');
+      } catch (err) {
+        alert(`Lỗi khi dừng: ${err.message}`);
+      } finally {
+        btnStopAll.disabled = false;
+        btnStopAll.innerHTML = originalText;
+        pollActiveTasks();
+      }
+    });
+  }
 
   // --- Task Polling Mechanics ---
   function checkAndStartPolling() {

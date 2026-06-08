@@ -331,12 +331,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const prompt = document.getElementById('img-prompt').value.trim();
     if (!prompt) return;
 
-    await submitTask(prompt, filesToUploadImage);
+    const lines = prompt.split('\n').map(l => l.trim()).filter(Boolean);
+    const btnSubmit = formImage.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
     
-    // Clear form
-    document.getElementById('img-prompt').value = '';
-    filesToUploadImage.length = 0;
-    imgPreviewGrid.innerHTML = '';
+    try {
+      btnSubmit.disabled = true;
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        const hasKeyword = /tạo ảnh|tạo video|tao anh|tao video|generate image|generate video|create image|create video/i.test(line);
+        if (!hasKeyword) {
+          line = `tạo ảnh ${line}`;
+        }
+        btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi ${i + 1}/${lines.length}...`;
+        await submitTask(line, filesToUploadImage);
+      }
+      
+      // Clear form
+      document.getElementById('img-prompt').value = '';
+      filesToUploadImage.length = 0;
+      imgPreviewGrid.innerHTML = '';
+    } catch (err) {
+      alert(`Lỗi: ${err.message}`);
+    } finally {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = originalText;
+    }
   });
 
   formVideo.addEventListener('submit', async (e) => {
@@ -344,10 +364,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const prompt = document.getElementById('vid-prompt').value.trim();
     if (!prompt) return;
 
-    await submitTask(prompt, []);
+    const lines = prompt.split('\n').map(l => l.trim()).filter(Boolean);
+    const btnSubmit = formVideo.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
     
-    // Clear form
-    document.getElementById('vid-prompt').value = '';
+    try {
+      btnSubmit.disabled = true;
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        const hasKeyword = /tạo ảnh|tạo video|tao anh|tao video|generate image|generate video|create image|create video/i.test(line);
+        if (!hasKeyword) {
+          line = `tạo video ${line}`;
+        }
+        btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi ${i + 1}/${lines.length}...`;
+        await submitTask(line, []);
+      }
+      
+      // Clear form
+      document.getElementById('vid-prompt').value = '';
+    } catch (err) {
+      alert(`Lỗi: ${err.message}`);
+    } finally {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = originalText;
+    }
   });
 
   formEdit.addEventListener('submit', async (e) => {
@@ -355,12 +395,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const prompt = document.getElementById('edit-prompt').value.trim();
     if (!prompt) return;
 
-    await submitTask(prompt, filesToUploadEdit);
-
-    // Clear form
-    document.getElementById('edit-prompt').value = '';
-    filesToUploadEdit.length = 0;
-    editPreviewGrid.innerHTML = '';
+    const lines = prompt.split('\n').map(l => l.trim()).filter(Boolean);
+    const btnSubmit = formEdit.querySelector('button[type="submit"]');
+    const originalText = btnSubmit.innerHTML;
+    
+    try {
+      btnSubmit.disabled = true;
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        const hasKeyword = /tạo ảnh|tạo video|tao anh|tao video|generate image|generate video|create image|create video/i.test(line);
+        if (!hasKeyword) {
+          line = `tạo video ${line}`;
+        }
+        btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi ${i + 1}/${lines.length}...`;
+        await submitTask(line, filesToUploadEdit);
+      }
+      
+      // Clear form
+      document.getElementById('edit-prompt').value = '';
+      filesToUploadEdit.length = 0;
+      editPreviewGrid.innerHTML = '';
+    } catch (err) {
+      alert(`Lỗi: ${err.message}`);
+    } finally {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = originalText;
+    }
   });
 
   // --- Task History Management & Rendering ---

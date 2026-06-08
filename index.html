@@ -48,9 +48,18 @@
             <i class="fa-solid fa-link"></i> Kết nối
           </button>
         </div>
-        <div class="conn-status-row">
-          <span class="status-indicator offline" id="conn-indicator"></span>
-          <span class="status-text" id="conn-status-text">Chưa kết nối</span>
+        <div class="conn-status-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 5px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="status-indicator offline" id="conn-indicator"></span>
+            <span class="status-text" id="conn-status-text">Chưa kết nối</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label class="switch-control">
+              <input type="checkbox" id="auto-download-input" name="autoDownload">
+              <span class="slider-control"></span>
+            </label>
+            <span style="font-size: 0.75rem; color: var(--text-muted); cursor: pointer; user-select: none;" id="label-auto-download">Tự động tải về máy khi tạo xong</span>
+          </div>
         </div>
       </div>
     </header>

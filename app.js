@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnConnect = document.getElementById('btn-connect');
   const connIndicator = document.getElementById('conn-indicator');
   const connStatusText = document.getElementById('conn-status-text');
+  const autoDownloadInput = document.getElementById('auto-download-input');
+  const labelAutoDownload = document.getElementById('label-auto-download');
   
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
@@ -31,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let filesToUploadEdit = [];
   let taskList = [];
   let pollingInterval = null;
+  const downloadedTaskIds = new Set(JSON.parse(localStorage.getItem('10s_downloaded_tasks') || '[]'));
 
   // --- Initialize Config and Connection ---
   function init() {
@@ -55,6 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (savedKey) apiKeyInput.value = savedKey;
     }
 
+    // Load auto-download preference
+    const savedAutoDownload = localStorage.getItem('10s_auto_download');
+    if (autoDownloadInput) {
+      autoDownloadInput.checked = savedAutoDownload !== 'false';
+    }
+
     // Load Task List from localStorage
     const savedTasks = localStorage.getItem('10s_task_list');
     if (savedTasks) {
@@ -73,6 +82,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (finalUrl && finalKey) {
       testConnection(finalUrl, finalKey);
     }
+  }
+
+  // Auto-download listener
+  if (autoDownloadInput) {
+    autoDownloadInput.addEventListener('change', () => {
+      localStorage.setItem('10s_auto_download', autoDownloadInput.checked);
+    });
+  }
+  if (labelAutoDownload && autoDownloadInput) {
+    labelAutoDownload.addEventListener('click', () => {
+      autoDownloadInput.checked = !autoDownloadInput.checked;
+      localStorage.setItem('10s_auto_download', autoDownloadInput.checked);
+    });
+  }
+
+  function triggerBrowserDownload(url) {
+    const a = document.createElement('a');
+    a.href = url;
+    // Keep original filename
+    a.download = url.split('/').pop().split('?')[0];
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   // Test API connection
@@ -525,6 +557,19 @@ document.addEventListener('DOMContentLoaded', () => {
           task.outputFiles = serverTask.outputFiles;
           task.updatedAt = serverTask.updatedAt || new Date().toISOString();
           updatedAny = true;
+
+          // Auto-download if completed
+          if (task.status === 'completed' && autoDownloadInput && autoDownloadInput.checked) {
+            if (!downloadedTaskIds.has(task.id)) {
+              if (task.outputFiles && task.outputFiles.length > 0) {
+                task.outputFiles.forEach(fileUrl => {
+                  triggerBrowserDownload(fileUrl);
+                });
+              }
+              downloadedTaskIds.add(task.id);
+              localStorage.setItem('10s_downloaded_tasks', JSON.stringify(Array.from(downloadedTaskIds)));
+            }
+          }
         }
       } catch (err) {
         console.error(`Lỗi khi polling task ${task.id}:`, err.message);

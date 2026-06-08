@@ -121,6 +121,16 @@
                 <i class="fa-solid fa-circle-info"></i> Prompt phải chứa cụm từ <strong>"tạo video"</strong> (ví dụ: tạo video ô tô chạy trên sa mạc).
               </div>
             </div>
+            <div class="form-group">
+              <label>Ảnh tham chiếu (Tùy chọn - sinh video từ ảnh)</label>
+              <div class="dropzone" id="vid-dropzone">
+                <input type="file" id="vid-file" accept="image/*" multiple style="display: none;">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>Kéo thả ảnh tham chiếu hoặc click để chọn</p>
+                <span class="dropzone-subtext">Đính kèm ảnh tham chiếu để tạo video chuyển động (Image-to-Video)</span>
+                <div class="preview-grid" id="vid-preview-grid"></div>
+              </div>
+            </div>
             
             <button type="submit" class="btn btn-success btn-submit">
               <i class="fa-solid fa-play"></i> Bắt đầu tạo video

@@ -24,6 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const editFileInput = document.getElementById('edit-file');
   const editPreviewGrid = document.getElementById('edit-preview-grid');
   
+  const vidDropzone = document.getElementById('vid-dropzone');
+  const vidFileInput = document.getElementById('vid-file');
+  const vidPreviewGrid = document.getElementById('vid-preview-grid');
+  
   const tasksListContainer = document.getElementById('tasks-list-container');
   const emptyTasksState = document.getElementById('empty-tasks-state');
   const btnClearHistory = document.getElementById('btn-clear-history');
@@ -31,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- State Variables ---
   let filesToUploadImage = [];
   let filesToUploadEdit = [];
+  let filesToUploadVideo = [];
   let taskList = [];
   let pollingInterval = null;
   const downloadedTaskIds = new Set(JSON.parse(localStorage.getItem('10s_downloaded_tasks') || '[]'));
@@ -274,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupDragAndDrop(imgDropzone, imgFileInput, filesToUploadImage, imgPreviewGrid);
   setupDragAndDrop(editDropzone, editFileInput, filesToUploadEdit, editPreviewGrid);
+  setupDragAndDrop(vidDropzone, vidFileInput, filesToUploadVideo, vidPreviewGrid);
 
   // --- API Form Submissions ---
   async function submitTask(prompt, files) {
@@ -377,11 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
           line = `tạo video ${line}`;
         }
         btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi ${i + 1}/${lines.length}...`;
-        await submitTask(line, []);
+        await submitTask(line, filesToUploadVideo);
       }
       
       // Clear form
       document.getElementById('vid-prompt').value = '';
+      filesToUploadVideo.length = 0;
+      vidPreviewGrid.innerHTML = '';
     } catch (err) {
       alert(`Lỗi: ${err.message}`);
     } finally {

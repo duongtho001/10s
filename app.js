@@ -68,8 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (savedUrl && savedKey) {
-      testConnection(savedUrl, savedKey);
+    const finalUrl = apiUrlInput.value.trim();
+    const finalKey = apiKeyInput.value.trim();
+    if (finalUrl && finalKey) {
+      testConnection(finalUrl, finalKey);
     }
   }
 

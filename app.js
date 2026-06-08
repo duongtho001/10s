@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let taskList = [];
   let pollingInterval = null;
   const downloadedTaskIds = new Set(JSON.parse(localStorage.getItem('10s_downloaded_tasks') || '[]'));
+  const expandedTaskIds = new Set();
 
   // --- Initialize Config and Connection ---
   function init() {
@@ -430,6 +431,28 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<button class="btn-cancel-task" onclick="cancelClientTask('${task.id}')" title="Hủy tác vụ này" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;"><i class="fa-solid fa-ban"></i> Hủy</button>` 
         : '';
 
+      // Xử lý rút gọn prompt dài
+      const isExpanded = expandedTaskIds.has(task.id);
+      const isExpandedStr = isExpanded ? 'true' : 'false';
+      const promptLimit = 80;
+      const isLongPrompt = task.prompt.length > promptLimit;
+      
+      let promptHtml = '';
+      if (isLongPrompt) {
+        const displayPrompt = isExpanded 
+          ? task.prompt 
+          : (task.prompt.substring(0, promptLimit) + '...');
+        const btnText = isExpanded ? 'Thu gọn' : 'Đọc thêm';
+        promptHtml = `
+          <div class="task-prompt">
+            <span class="prompt-text">${displayPrompt}</span>
+            <button type="button" class="btn-toggle-prompt" onclick="togglePromptText('${task.id}')" style="background: none; border: none; color: var(--color-primary); font-size: 0.78rem; font-weight: 600; cursor: pointer; padding: 0; margin-left: 6px; outline: none; text-decoration: underline; display: inline;">${btnText}</button>
+          </div>
+        `;
+      } else {
+        promptHtml = `<div class="task-prompt">${task.prompt}</div>`;
+      }
+
       const cardHtml = `
         <div class="task-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span class="task-id">ID: ${task.id.substring(0, 8)}</span>
@@ -438,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${cancelBtnHtml}
           </div>
         </div>
-        <div class="task-prompt">${task.prompt}</div>
+        ${promptHtml}
         ${task.hasRef ? `
           <div class="task-input-ref">
             <i class="fa-solid fa-paperclip"></i> Có đính kèm file tham chiếu
@@ -462,10 +485,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (existingCards[cardId]) {
         // Update existing card
-        if (existingCards[cardId].getAttribute('data-status') !== task.status || existingCards[cardId].getAttribute('data-updated') !== task.updatedAt) {
+        const prevStatus = existingCards[cardId].getAttribute('data-status');
+        const prevUpdated = existingCards[cardId].getAttribute('data-updated');
+        const prevExpanded = existingCards[cardId].getAttribute('data-expanded');
+        
+        if (prevStatus !== task.status || prevUpdated !== task.updatedAt || prevExpanded !== isExpandedStr) {
           existingCards[cardId].innerHTML = cardHtml;
           existingCards[cardId].setAttribute('data-status', task.status);
           existingCards[cardId].setAttribute('data-updated', task.updatedAt);
+          existingCards[cardId].setAttribute('data-expanded', isExpandedStr);
         }
         // Move to correct position index
         if (tasksListContainer.children[index] !== existingCards[cardId]) {
@@ -479,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = 'task-card';
         card.setAttribute('data-status', task.status);
         card.setAttribute('data-updated', task.updatedAt);
+        card.setAttribute('data-expanded', isExpandedStr);
         card.innerHTML = cardHtml;
         
         if (tasksListContainer.children[index]) {
@@ -627,6 +656,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       alert(`Lỗi: ${error.message}`);
     }
+  };
+
+  // Toggle rút gọn/đọc thêm prompt
+  window.togglePromptText = (id) => {
+    if (expandedTaskIds.has(id)) {
+      expandedTaskIds.delete(id);
+    } else {
+      expandedTaskIds.add(id);
+    }
+    renderTaskList();
   };
 
   // --- Initialize Page ---

@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let pollingInterval = null;
   const downloadedTaskIds = new Set(JSON.parse(localStorage.getItem('10s_downloaded_tasks') || '[]'));
   const expandedTaskIds = new Set();
+  const editingTaskPrompts = {};
 
   // --- Initialize Config and Connection ---
   function init() {
@@ -511,21 +512,42 @@ document.addEventListener('DOMContentLoaded', () => {
       const promptLimit = 80;
       const isLongPrompt = task.prompt.length > promptLimit;
       
+      let isEditing = editingTaskPrompts[task.id] !== undefined;
       let promptHtml = '';
-      if (isLongPrompt) {
-        const displayPrompt = isExpanded 
-          ? task.prompt 
-          : (task.prompt.substring(0, promptLimit) + '...');
-        const btnText = isExpanded ? 'Thu gọn' : 'Đọc thêm';
+      if (isEditing) {
         promptHtml = `
-          <div class="task-prompt">
-            <span class="prompt-text">${displayPrompt}</span>
-            <button type="button" class="btn-toggle-prompt" onclick="togglePromptText('${task.id}')" style="background: none; border: none; color: var(--color-primary); font-size: 0.78rem; font-weight: 600; cursor: pointer; padding: 0; margin-left: 6px; outline: none; text-decoration: underline; display: inline;">${btnText}</button>
+          <div class="task-prompt-edit-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px; width: 100%;">
+            <textarea class="form-control-textarea edit-prompt-textarea" style="width: 100%; font-size: 0.85rem; padding: 0.4rem; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: var(--border-radius-sm); color: #fff; background: rgba(0,0,0,0.25); font-family: inherit; resize: vertical;" rows="2" id="edit-prompt-input-${task.id}">${editingTaskPrompts[task.id]}</textarea>
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem; border-radius: 4px;" onclick="cancelEditPrompt('${task.id}')">Hủy</button>
+              <button class="btn btn-primary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem; border-radius: 4px;" onclick="savePromptText('${task.id}')">Lưu</button>
+              <button class="btn btn-success btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem; border-radius: 4px;" onclick="recreateTaskWithPrompt('${task.id}', false)"><i class="fa-solid fa-arrows-rotate"></i> Tạo lại</button>
+            </div>
           </div>
         `;
       } else {
-        promptHtml = `<div class="task-prompt">${task.prompt}</div>`;
+        if (isLongPrompt) {
+          const displayPrompt = isExpanded 
+            ? task.prompt 
+            : (task.prompt.substring(0, promptLimit) + '...');
+          const btnText = isExpanded ? 'Thu gọn' : 'Đọc thêm';
+          promptHtml = `
+            <div class="task-prompt">
+              <span class="prompt-text">${displayPrompt}</span>
+              <button type="button" class="btn-toggle-prompt" onclick="togglePromptText('${task.id}')" style="background: none; border: none; color: var(--color-primary); font-size: 0.78rem; font-weight: 600; cursor: pointer; padding: 0; margin-left: 6px; outline: none; text-decoration: underline; display: inline;">${btnText}</button>
+            </div>
+          `;
+        } else {
+          promptHtml = `<div class="task-prompt">${task.prompt}</div>`;
+        }
       }
+
+      const editBtnHtml = !isEditing
+        ? `<button class="btn-edit-task" onclick="startEditPrompt('${task.id}')" title="Sửa prompt" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #e0e0e0; font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;"><i class="fa-solid fa-pen"></i> Sửa</button>`
+        : '';
+      const recreateBtnHtml = !isEditing
+        ? `<button class="btn-recreate-task" onclick="recreateTaskWithPrompt('${task.id}', true)" title="Tạo lại tác vụ này" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;"><i class="fa-solid fa-arrows-rotate"></i> Tạo lại</button>`
+        : '';
 
       const cardHtml = `
         <div class="task-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -533,6 +555,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display: flex; align-items: center; gap: 6px;">
             <span class="status-badge ${task.status}">${statusText}</span>
             ${cancelBtnHtml}
+            ${editBtnHtml}
+            ${recreateBtnHtml}
           </div>
         </div>
         ${promptHtml}
@@ -791,6 +815,90 @@ document.addEventListener('DOMContentLoaded', () => {
       expandedTaskIds.add(id);
     }
     renderTaskList();
+  };
+
+  // --- Prompt inline editing & recreation ---
+  window.startEditPrompt = (id) => {
+    const task = taskList.find(t => t.id === id);
+    if (task) {
+      editingTaskPrompts[id] = task.prompt;
+      renderTaskList();
+    }
+  };
+
+  window.cancelEditPrompt = (id) => {
+    delete editingTaskPrompts[id];
+    renderTaskList();
+  };
+
+  window.savePromptText = (id) => {
+    const textarea = document.getElementById(`edit-prompt-input-${id}`);
+    if (textarea) {
+      const newPrompt = textarea.value.trim();
+      if (!newPrompt) {
+        alert('Prompt không được để trống!');
+        return;
+      }
+      const task = taskList.find(t => t.id === id);
+      if (task) {
+        task.prompt = newPrompt;
+        task.updatedAt = new Date().toISOString();
+        saveTasks();
+        delete editingTaskPrompts[id];
+        renderTaskList();
+      }
+    }
+  };
+
+  window.recreateTaskWithPrompt = async (id, useCurrentText = false) => {
+    const task = taskList.find(t => t.id === id);
+    if (!task) return;
+
+    let prompt = task.prompt;
+    if (!useCurrentText) {
+      const textarea = document.getElementById(`edit-prompt-input-${id}`);
+      if (textarea) {
+        prompt = textarea.value.trim();
+      }
+    }
+
+    if (!prompt) {
+      alert('Prompt không được để trống!');
+      return;
+    }
+
+    // Determine files to upload based on current active tab
+    const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+    let files = [];
+    if (activeTab === 'tab-image') files = filesToUploadImage;
+    else if (activeTab === 'tab-video') files = filesToUploadVideo;
+    else if (activeTab === 'tab-edit') files = filesToUploadEdit;
+
+    if (task.hasRef && files.length === 0) {
+      if (!confirm('Tác vụ gốc có tệp tham chiếu, nhưng hiện tại bạn chưa chọn tệp mới ở bảng bên trái. Bạn có muốn tiếp tục tạo lại tác vụ CHỈ với câu chữ prompt không?')) {
+        return;
+      }
+    }
+
+    // Submit
+    const btnSubmit = document.querySelector('.tab-content.active form button[type="submit"]');
+    const originalText = btnSubmit ? btnSubmit.innerHTML : '';
+    try {
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...`;
+      }
+      await submitTask(prompt, files);
+      delete editingTaskPrompts[id];
+      renderTaskList();
+    } catch (err) {
+      alert(`Lỗi khi tạo lại: ${err.message}`);
+    } finally {
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = originalText;
+      }
+    }
   };
 
   // --- Initialize Page ---

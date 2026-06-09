@@ -586,12 +586,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevStatus = existingCards[cardId].getAttribute('data-status');
         const prevUpdated = existingCards[cardId].getAttribute('data-updated');
         const prevExpanded = existingCards[cardId].getAttribute('data-expanded');
+        const prevEditing = existingCards[cardId].getAttribute('data-editing');
+        const isEditingStr = isEditing ? 'true' : 'false';
         
-        if (prevStatus !== task.status || prevUpdated !== task.updatedAt || prevExpanded !== isExpandedStr) {
+        if (prevStatus !== task.status || prevUpdated !== task.updatedAt || prevExpanded !== isExpandedStr || prevEditing !== isEditingStr) {
           existingCards[cardId].innerHTML = cardHtml;
           existingCards[cardId].setAttribute('data-status', task.status);
           existingCards[cardId].setAttribute('data-updated', task.updatedAt);
           existingCards[cardId].setAttribute('data-expanded', isExpandedStr);
+          existingCards[cardId].setAttribute('data-editing', isEditingStr);
         }
         // Move to correct position index
         if (tasksListContainer.children[index] !== existingCards[cardId]) {
@@ -606,6 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.setAttribute('data-status', task.status);
         card.setAttribute('data-updated', task.updatedAt);
         card.setAttribute('data-expanded', isExpandedStr);
+        card.setAttribute('data-editing', isEditing ? 'true' : 'false');
         card.innerHTML = cardHtml;
         
         if (tasksListContainer.children[index]) {

@@ -32,6 +32,79 @@ document.addEventListener('DOMContentLoaded', () => {
   const emptyTasksState = document.getElementById('empty-tasks-state');
   const btnClearHistory = document.getElementById('btn-clear-history');
   const btnStopAll = document.getElementById('btn-stop-all');
+  const btnNewProject = document.getElementById('btn-new-project');
+
+  async function triggerClientNewProject() {
+    const baseUrl = apiUrlInput.value.trim().replace(/\/+$/, '');
+    const apiKey = apiKeyInput.value.trim();
+
+    if (!baseUrl || !apiKey) {
+      alert('Vui lòng kết nối máy chủ ở Header trước khi tạo dự án mới!');
+      return;
+    }
+
+    if (btnNewProject) {
+      btnNewProject.disabled = true;
+      btnNewProject.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...`;
+    }
+
+    try {
+      const response = await fetch(`${baseUrl}/cloudfire/api/generate`, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: '__NEW_CHAT_REQUEST__',
+          autoDownload: 'false'
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Lỗi HTTP ${response.status}`);
+
+      // Add task to state list
+      const newTask = {
+        id: result.taskId,
+        prompt: '🔄 Yêu cầu tạo cuộc trò chuyện mới (Reset Chat)',
+        status: result.status || 'pending',
+        outputFiles: [],
+        error: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        hasRef: false
+      };
+
+      taskList.unshift(newTask);
+      saveTasks();
+      renderTaskList();
+      
+      // Start polling
+      checkAndStartPolling();
+      
+      alert('✅ Đã gửi yêu cầu tạo dự án mới thành công! Hệ thống đang tự động khởi tạo phiên chat mới trên Chrome của bạn.');
+    } catch (error) {
+      alert(`Không thể gửi yêu cầu tạo dự án mới: ${error.message}`);
+    } finally {
+      if (btnNewProject) {
+        btnNewProject.disabled = false;
+        btnNewProject.innerHTML = `<i class="fa-solid fa-plus-circle"></i> Tạo dự án mới <span style="font-size: 0.58rem; background: rgba(255,255,255,0.18); padding: 1px 4px; border-radius: 3px; font-family: monospace;">Ctrl+Shift+O</span>`;
+      }
+    }
+  }
+
+  // Phím tắt Ctrl+Shift+O trên client
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'O' || e.key === 'o')) {
+      e.preventDefault();
+      triggerClientNewProject();
+    }
+  });
+
+  if (btnNewProject) {
+    btnNewProject.addEventListener('click', triggerClientNewProject);
+  }
 
   // --- State Variables ---
   let filesToUploadImage = [];

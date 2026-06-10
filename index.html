@@ -28,7 +28,13 @@
           <i class="fa-solid fa-wand-magic-sparkles"></i>
         </div>
         <div class="logo-text">
-          <h1>10S Studio <span class="version-badge">v1.0</span></h1>
+          <h1 style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            10S Studio <span class="version-badge">v1.0</span>
+            <button type="button" id="btn-new-project" style="font-size: 0.72rem; padding: 0.35rem 0.85rem; border-radius: 50px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; background: #10b981; border: none; color: #fff; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: all 0.2s;" title="Gửi yêu cầu tạo cuộc trò chuyện mới (Ctrl+Shift+O)" onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='none';">
+              <i class="fa-solid fa-plus-circle"></i> Tạo dự án mới
+              <span style="font-size: 0.58rem; background: rgba(255,255,255,0.18); padding: 1px 4px; border-radius: 3px; font-family: monospace;">Ctrl+Shift+O</span>
+            </button>
+          </h1>
           <span>Trình tạo Ảnh & Video AI chuyên nghiệp</span>
         </div>
       </div>
@@ -144,24 +150,26 @@
             <div class="form-group">
               <label for="edit-prompt">Mô tả chỉnh sửa hoặc tham chiếu tạo video <span class="required">*</span></label>
               <textarea id="edit-prompt" class="form-control-textarea" rows="3" placeholder="Ví dụ: tạo video làm sáng bối cảnh xung quanh và tăng chuyển động nước" required></textarea>
-              <div class="prompt-hint">
-                <i class="fa-solid fa-circle-info"></i> Tải lên video gốc cần chỉnh sửa kèm theo các ảnh tham chiếu (nếu có).
+              <div class="prompt-hint" style="line-height: 1.5;">
+                <i class="fa-solid fa-circle-info"></i> 
+                <strong>Cách 1:</strong> Chỉnh sửa video (1 video + nhiều ảnh tham chiếu + prompt)<br>
+                <span style="margin-left: 18px;"><strong>Cách 2:</strong> Tạo video từ nhiều ảnh tham chiếu (không giới hạn ảnh + prompt)</span>
               </div>
             </div>
             
             <div class="form-group">
-              <label>Đính kèm Video gốc & Ảnh tham chiếu</label>
+              <label>Đính kèm Video gốc và/hoặc nhiều Ảnh tham chiếu</label>
               <div class="dropzone" id="edit-dropzone">
                 <input type="file" id="edit-file" accept="image/*,video/*" multiple style="display: none;">
                 <i class="fa-solid fa-file-video"></i>
-                <p>Kéo thả 1 video và ảnh tham chiếu hoặc click để chọn</p>
-                <span class="dropzone-subtext">Hỗ trợ 1 video + tối đa 3 ảnh tham chiếu</span>
+                <p>Kéo thả Video & các Ảnh tham chiếu hoặc click để chọn</p>
+                <span class="dropzone-subtext">Hỗ trợ tải lên không giới hạn ảnh tham chiếu</span>
                 <div class="preview-grid" id="edit-preview-grid"></div>
               </div>
             </div>
             
             <button type="submit" class="btn btn-success btn-submit">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Gửi yêu cầu chỉnh sửa
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Gửi yêu cầu tạo / chỉnh sửa
             </button>
           </form>
         </div>

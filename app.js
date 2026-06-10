@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       if (btnNewProject) {
         btnNewProject.disabled = false;
-        btnNewProject.innerHTML = `<i class="fa-solid fa-plus-circle" style="color: var(--color-primary);"></i> Tạo dự án mới (Reset Session) <span style="font-size: 0.72rem; background: rgba(255, 255, 255, 0.08); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: var(--text-muted); margin-left: auto;">Ctrl+Shift+O</span>`;
+        btnNewProject.innerHTML = `<i class="fa-solid fa-plus-circle" style="color: var(--color-primary);"></i> Tạo dự án mới <span style="font-size: 0.65rem; background: rgba(255,255,255,0.08); padding: 1px 4.5px; border-radius: 3px; font-family: monospace; color: var(--text-muted);">Ctrl+Shift+O</span>`;
       }
     }
   }
